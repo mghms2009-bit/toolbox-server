@@ -7,38 +7,39 @@ const PORT = process.env.PORT || 3000;
 app.get("/search", async (req, res) => {
     const query = req.query.query || "";
     const category = req.query.category || "Audio";
-    const page = req.query.page || 1;
 
-    let assetType = category === "Mesh" ? 40 : 3; 
-    // 3 = Audio
-    // 40 = Mesh
+    const assetType = category === "Mesh" ? 40 : 3;
 
     try {
         const response = await axios.get(
-            `https://catalog.roblox.com/v1/search/items/details`,
+            "https://catalog.roblox.com/v1/search/items",
             {
                 params: {
-                    Category: 11,
-                    Subcategory: 0,
-                    Keyword: query,
-                    AssetTypes: assetType,
-                    SortType: 1,
-                    Limit: 30,
-                    Cursor: ""
+                    category: 11,
+                    keyword: query,
+                    limit: 30
+                },
+                headers: {
+                    "User-Agent": "Mozilla/5.0"
                 }
             }
         );
 
-        const freeOnly = response.data.data.filter(item => item.price === 0);
+        const items = response.data.data || [];
 
-        res.json(freeOnly.map(item => ({
+        const filtered = items.filter(item =>
+            item.assetType === assetType &&
+            item.price === 0
+        );
+
+        res.json(filtered.map(item => ({
             id: item.id,
             name: item.name
         })));
 
     } catch (err) {
-        console.log(err.message);
-        res.status(500).json([]);
+        console.log("ERROR:", err.message);
+        res.status(500).json({ error: err.message });
     }
 });
 
