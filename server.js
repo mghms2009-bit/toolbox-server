@@ -12,12 +12,16 @@ app.get("/search", async (req, res) => {
 
     try {
         const response = await axios.get(
-            "https://catalog.roblox.com/v1/search/items",
+            "https://catalog.roblox.com/v1/search/items/details",
             {
                 params: {
-                    category: 11,
-                    keyword: query,
-                    limit: 30
+                    Category: 11, // Marketplace
+                    Subcategory: 0,
+                    Keyword: query,
+                    AssetTypes: assetType,
+                    SortType: 1,
+                    SortAggregation: 5,
+                    Limit: 30
                 },
                 headers: {
                     "User-Agent": "Mozilla/5.0"
@@ -27,19 +31,16 @@ app.get("/search", async (req, res) => {
 
         const items = response.data.data || [];
 
-        const filtered = items.filter(item =>
-            item.assetType === assetType &&
-            item.price === 0
-        );
+        const freeOnly = items.filter(item => item.price === 0);
 
-        res.json(filtered.map(item => ({
+        res.json(freeOnly.map(item => ({
             id: item.id,
             name: item.name
         })));
 
     } catch (err) {
-        console.log("ERROR:", err.message);
-        res.status(500).json({ error: err.message });
+        console.log("ERROR:", err.response?.data || err.message);
+        res.status(500).json([]);
     }
 });
 
