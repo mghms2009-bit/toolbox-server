@@ -15,12 +15,9 @@ app.get("/search", async (req, res) => {
             "https://catalog.roblox.com/v1/search/items/details",
             {
                 params: {
-                    Category: 11, // Marketplace
-                    Subcategory: 0,
+                    Category: 11,
                     Keyword: query,
                     AssetTypes: assetType,
-                    SortType: 1,
-                    SortAggregation: 5,
                     Limit: 30
                 },
                 headers: {
@@ -29,18 +26,20 @@ app.get("/search", async (req, res) => {
             }
         );
 
-        const items = response.data.data || [];
+        const items = response.data?.data || [];
 
-        const freeOnly = items.filter(item => item.price === 0);
+        const results = items
+            .filter(item => item && item.id && item.name)
+            .map(item => ({
+                id: item.id,
+                name: item.name
+            }));
 
-        res.json(freeOnly.map(item => ({
-            id: item.id,
-            name: item.name
-        })));
+        res.json(results);
 
     } catch (err) {
         console.log("ERROR:", err.response?.data || err.message);
-        res.status(500).json([]);
+        res.status(500).json({ error: "Server error" });
     }
 });
 
